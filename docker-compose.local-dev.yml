@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  mongo_dev:
+    container_name: mongo_dev
+    image: mongo:6.0
+    restart: always
+    ports:
+      - ${MONGO_EXPOSED_PORT}:${MONGODB_PORT}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    networks:
+      - baseweb_backend_network
+
+  redis_dev:
+    container_name: redis_dev
+    image: redis:6.2-alpine
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_AUTH_PASSWORD}
+    restart: always
+    ports:
+      - ${REDIS_EXPOSED_PORT}:${REDIS_PORT}
+    networks:
+      - baseweb_backend_network
+
+  baseweb_api_dev:
+    container_name: baseweb_api_dev
+    image: baseweb_api_dev:latest
+    build:
+      context: .
+      target: builder
+    environment:
+      TERM: linux
+      LANG: "C.UTF-8"
+      NODE_ENV: production
+    env_file:
+      - .env.api.docker.local
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "2"
+    restart: "always"
+    ports:
+      - ${SERVER_EXPOSED_PORT}:${SERVER_PORT}
+    depends_on:
+      - mongo_dev
+      - redis_dev
+    volumes:
+      - ./src:/app/src
+      - ./package.json:/app/package.json
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+    networks:
+      - baseweb_backend_network
+
+networks:
+  baseweb_backend_network:
+    driver: bridge
