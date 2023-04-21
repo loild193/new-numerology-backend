@@ -17,7 +17,7 @@ export const initRedisClient = async () => {
     url: redisUrl,
     database: config.redisDbForCaching,
   })
-  redisClient.on('error', (error) => console.log(`Error : ${error}`))
+  redisClient.on('error', (error) => console.log(`${error}`))
 
   await redisClient.connect()
   console.log(`Connected to Redis server: ${config.redisHost}:${config.redisPort}/${config.redisDbForCaching} database`)

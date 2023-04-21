@@ -11,7 +11,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
     networks:
-      - baseweb_backend_network
+      - new_numerology_backend_network
 
   redis_dev:
     container_name: redis_dev
@@ -21,11 +21,11 @@ services:
     ports:
       - ${REDIS_EXPOSED_PORT}:${REDIS_PORT}
     networks:
-      - baseweb_backend_network
+      - new_numerology_backend_network
 
-  referral_api_dev:
-    container_name: referral_api_dev
-    image: referral_api_dev:latest
+  new_numerology_api_dev:
+    container_name: new_numerology_api_dev
+    image: new_numerology_api_dev:latest
     build:
       context: .
       target: release
@@ -34,7 +34,7 @@ services:
       LANG: "C.UTF-8"
       NODE_ENV: production
     env_file:
-      - .env.api.dev
+      - .env.api.docker.local
     logging:
       driver: json-file
       options:
@@ -47,8 +47,8 @@ services:
       - mongo_dev
       - redis_dev
     networks:
-      - baseweb_backend_network
+      - new_numerology_backend_network
 
 networks:
-  baseweb_backend_network:
+  new_numerology_backend_network:
     driver: bridge
