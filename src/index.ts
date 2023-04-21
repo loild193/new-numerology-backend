@@ -7,7 +7,7 @@ import bodyParser from 'koa-body'
 import json from 'koa-json'
 import cors from '@koa/cors'
 import jwt from 'koa-jwt'
-import jsonwebtoken, { TokenExpiredError } from 'jsonwebtoken'
+import jsonwebtoken from 'jsonwebtoken'
 import { StatusCodes, getReasonPhrase } from 'http-status-codes'
 import logger from 'koa-pino-logger'
 import requestReceived from 'request-received'
@@ -17,7 +17,10 @@ import config from './config'
 import initializeDBConnection from './database'
 import indexRouter from './routes/index.route'
 import debugRouter from './routes/debug.route'
+import authenticationRouter from './routes/authentication.route'
+import userRouter from './routes/user.route'
 import Redis, { initRedisClient } from './utils/cache'
+import { ERROR_CODE } from './types/error'
 
 initializeDBConnection()
 
@@ -51,7 +54,7 @@ app.use(json())
 
 app.use(
   jwt({ secret: config.jwtSecretKey, cookie: '_access_token' }).unless({
-    path: ['/', '/healthcheck', '/api/v1/debug', '/api/v1/debug-limit-ip'],
+    path: ['/', '/healthcheck', '/api/v1/debug', '/api/v1/debug-limit-ip', '/api/v1/sign-up', '/api/v1/sign-in'],
   }),
 )
 
@@ -62,18 +65,19 @@ app.use((ctx, next) => {
     if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
       const token = authorizationHeader.split(' ')[1]
       if (token) {
-        jsonwebtoken.verify(token, config.jwtSecretKey, function (err, decoded) {
+        jsonwebtoken.verify(token, config.jwtSecretKey, function (err, decoded: { id: number; role: number }) {
           if (err) {
-            if (err.name === TokenExpiredError.name) {
-              ctx.status = StatusCodes.BAD_REQUEST
-              ctx.body = { success: false, result: null, message: err.message }
-            } else {
-              ctx.status = StatusCodes.BAD_REQUEST
-              ctx.body = { success: false, result: null, message: err.message }
+            ctx.status = StatusCodes.UNAUTHORIZED
+            ctx.body = {
+              code: ERROR_CODE.UNAUTHORIZED,
+              message: err.message,
+              target: [],
+              innererror: {},
             }
           } else {
             ctx.user = {
-              userId: (decoded as { userId: string }).userId,
+              userId: decoded.id,
+              role: decoded.role,
             }
           }
         })
@@ -92,6 +96,8 @@ app.use((ctx, next) => {
 
 app.use(indexRouter.routes()).use(indexRouter.allowedMethods())
 app.use(debugRouter.routes()).use(debugRouter.allowedMethods())
+app.use(authenticationRouter.routes()).use(authenticationRouter.allowedMethods())
+app.use(userRouter.routes()).use(userRouter.allowedMethods())
 
 // middleware functions
 app.use(indexRouter.middleware())

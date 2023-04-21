@@ -58,6 +58,14 @@ const UserSearchRecordSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    createdBy: {
+      type: Number,
+      default: null,
+    },
+    updatedBy: {
+      type: Number,
+      default: null,
+    },
   },
   {
     collection: 'userSearchRecord',

@@ -9,6 +9,7 @@ export type TUser = {
   id: string
   userId: number
   email: string
+  username: string
   password: string
   phone: string
   searchAmountLeft: number
@@ -29,9 +30,13 @@ const UserSchema = new mongoose.Schema(
     },
     userId: {
       type: String,
-      required: true,
       unique: true,
       index: true,
+    },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
     },
     email: {
       type: String,
@@ -40,12 +45,10 @@ const UserSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
     },
     phone: {
       type: String,
       unique: true,
-      required: true,
     },
     searchAmountLeft: {
       type: Number,
@@ -63,6 +66,14 @@ const UserSchema = new mongoose.Schema(
       default: Math.floor(new Date().getTime() / 1000),
     },
     deletedAt: {
+      type: Number,
+      default: null,
+    },
+    createdBy: {
+      type: Number,
+      default: null,
+    },
+    updatedBy: {
       type: Number,
       default: null,
     },

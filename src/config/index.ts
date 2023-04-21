@@ -2,25 +2,30 @@ require('dotenv').config()
 
 type GlobalConfig = {
   serverPort: number
+
   mongoDbHost: string
   mongoDbPort: number
   mongoDbUsername: string
   mongoDbPassword: string
   mongoDbDatabase: string
+
   redisHost: string
   redisPort: number
   redisAuthPassword: string
   redisDbForCaching: number
+
   adminToken: string
   jwtSecretKey: string
-  jwtExpirationDuration: number
+  jwtAccessTokenExpiresIn: number
+  authSaltValue: number
 }
 
 const DEFAULT_SERVER_PORT = 9000
 const DEFAULT_MONGODB_PORT = 27017
 const DEFAULT_REDIS_PORT = 6379
 const DEFAULT_REDIS_DB_FOR_CACHING = 2
-const DEFAULT_JWT_EXPIRATION_DURATION = 86400 // 1 day in seconds
+const DEFAULT_JWT_ACCESS_TOKEN_EXPIRES_IN = 86400 // 1 day in seconds
+const DEFAULT_AUTH_SALT_VALUE = 6
 
 if (!process.env.MONGODB_HOST) {
   console.log('Missing MONGODB_HOST in config')
@@ -75,9 +80,12 @@ const GLOBAL_CONFIG: GlobalConfig = {
 
   adminToken: process.env.X_ADMIN_TOKEN,
   jwtSecretKey: process.env.JWT_SECRET_KEY,
-  jwtExpirationDuration: Number.isNaN(Number(process.env.JWT_EXPIRATION_DURATION))
-    ? DEFAULT_JWT_EXPIRATION_DURATION
-    : Number(process.env.JWT_EXPIRATION_DURATION),
+  jwtAccessTokenExpiresIn: Number.isNaN(Number(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN))
+    ? DEFAULT_JWT_ACCESS_TOKEN_EXPIRES_IN
+    : Number(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN),
+  authSaltValue: Number.isNaN(Number(process.env.AUTH_SALT_VALUE))
+    ? DEFAULT_AUTH_SALT_VALUE
+    : Number(process.env.AUTH_SALT_VALUE),
 }
 
 export default GLOBAL_CONFIG

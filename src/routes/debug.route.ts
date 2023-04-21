@@ -7,11 +7,7 @@ const debugLimiter = RateLimit.middleware({
   max: 10,
   message: 'Too many requests. Please try again later.',
   keyGenerator: async (ctx) => {
-    const vercelIp = ctx.request.header['x-vercel-proxied-for']
-    let ip = vercelIp ?? ctx.request.header['cf-connecting-ip']
-    if (!ip) {
-      ip = ctx.request.ip
-    }
+    const ip = ctx.request.ip
     return `${ip}`
   },
 })
