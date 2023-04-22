@@ -7,7 +7,7 @@ export enum ROLE {
 
 export type TUser = {
   id: string
-  userId: number
+  userId: string
   email: string
   username: string
   password: string
@@ -32,16 +32,16 @@ const UserSchema = new mongoose.Schema(
       type: String,
       unique: true,
       index: true,
+      default: null,
     },
     username: {
       type: String,
-      required: true,
       unique: true,
+      required: true,
     },
     email: {
       type: String,
       unique: true,
-      required: true,
     },
     password: {
       type: String,

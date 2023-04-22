@@ -76,7 +76,7 @@ app.use((ctx, next) => {
             }
           } else {
             ctx.user = {
-              userId: decoded.id,
+              id: decoded.id,
               role: decoded.role,
             }
           }
