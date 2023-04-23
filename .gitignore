@@ -170,3 +170,5 @@ build/
 
 .env
 .env.api.docker.local
+
+volumes/*

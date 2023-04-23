@@ -2,7 +2,7 @@ version: '3'
 
 services:
   mongo_dev:
-    container_name: mongo_dev
+    container_name: new_numerology_mongo_dev
     image: mongo:6.0
     restart: always
     ports:
@@ -10,16 +10,20 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    volumes:
+      - ./volumes/data/mongo:/data/db
     networks:
       - new_numerology_backend_network
 
   redis_dev:
-    container_name: redis_dev
+    container_name: new_numerology_redis_dev
     image: redis:6.2-alpine
     command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_AUTH_PASSWORD}
     restart: always
     ports:
       - ${REDIS_EXPOSED_PORT}:${REDIS_PORT}
+    volumes:
+      - ./volumes/data/redis:/data
     networks:
       - new_numerology_backend_network
 

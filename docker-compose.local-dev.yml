@@ -10,6 +10,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    volumes:
+      - ./volumes/data/mongo:/data/db
     networks:
       - new_numerology_backend_network
 
@@ -20,6 +22,8 @@ services:
     restart: always
     ports:
       - ${REDIS_EXPOSED_PORT}:${REDIS_PORT}
+    volumes:
+      - ./volumes/data/redis:/data
     networks:
       - new_numerology_backend_network
 
