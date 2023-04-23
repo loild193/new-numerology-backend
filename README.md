@@ -29,7 +29,7 @@ cp .env.example .env
 - Create `.env.api.docker.local` from `.env.api.example` with your own modifications:
 
 ```sh
-cp .env.example .env
+cp .env.api.example .env.api.docker.local
 ```
 
 - Install app dependencies:
