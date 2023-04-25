@@ -1,0 +1,46 @@
+### Sign up
+POST http://localhost:9090/api/v1/sign-up
+Content-Type: application/json
+
+{
+  "username": "loild-1",
+  "email": "dekaito193-1@gmail.com",
+  "phone": "1231231231"
+}
+
+### Sign up for admin
+POST http://localhost:9090/api/v1/admin/sign-up
+x-admin-token: abcxyz
+Content-Type: application/json
+
+{
+  "userId": "admin",
+  "username": "loild-admin",
+  "email": "dekaito193-admin@gmail.com",
+  "phone": "0",
+  "password": "admin"
+}
+
+### Sign in
+POST http://localhost:9090/api/v1/sign-in
+Content-Type: application/json
+
+{
+  "userId": "admin",
+  "password": "admin"
+}
+
+### Get list users
+GET http://localhost:9090/api/v1/users?filter=not_have_account
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgyNDM5NTE4LCJleHAiOjE2ODI1MjU5MTh9.sk_h0CCyP7msRREWeqlRrfmHvJWWgJLc8SWAYKUjfpg
+
+### Update users
+PUT http://localhost:9090/api/v1/users/vf_htvvRcpFx81F_hBYvf
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgyNDM5NTE4LCJleHAiOjE2ODI1MjU5MTh9.sk_h0CCyP7msRREWeqlRrfmHvJWWgJLc8SWAYKUjfpg
+Content-Type: application/json
+
+{
+  "userId": "user1",
+  "password": "user1"
+}
+

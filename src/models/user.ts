@@ -14,11 +14,11 @@ export type TUser = {
   phone: string
   searchAmountLeft: number
   role: ROLE
-  createdAt: number // second
-  updatedAt: number // second
+  createdAt: Date // second
+  updatedAt: Date // second
   deletedAt: number // second
-  createdBy: number // userId
-  updatedBy: number // userid
+  createdBy: string // userId
+  updatedBy: string // userid
 }
 
 const UserSchema = new mongoose.Schema(
@@ -30,8 +30,6 @@ const UserSchema = new mongoose.Schema(
     },
     userId: {
       type: String,
-      unique: true,
-      index: true,
       default: null,
     },
     username: {
@@ -57,30 +55,23 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    createdAt: {
-      type: Number,
-      default: Math.floor(new Date().getTime() / 1000),
-    },
-    updatedAt: {
-      type: Number,
-      default: Math.floor(new Date().getTime() / 1000),
-    },
     deletedAt: {
       type: Number,
       default: null,
     },
     createdBy: {
-      type: Number,
+      type: String,
       default: null,
     },
     updatedBy: {
-      type: Number,
+      type: String,
       default: null,
     },
   },
   {
     collection: 'user',
     versionKey: false,
+    timestamps: true,
   },
 )
 

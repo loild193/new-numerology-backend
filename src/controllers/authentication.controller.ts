@@ -52,6 +52,35 @@ export const signUp = async (ctx: KoaContext) => {
   }
 
   try {
+    const foundUserRecord = await UserModel.findOne({
+      $or: [{ email }, { phone }, { username }],
+    })
+    if (foundUserRecord && Object.keys(foundUserRecord).length > 0) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.ALREADY_EXIST,
+          message: 'User existed',
+          target: ['email', 'phone', 'username'],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    console.log('[signUp] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
+  try {
     const createUserBody: Record<string, string | number> = {
       id: nanoid(),
       username,
@@ -87,36 +116,43 @@ export const signUp = async (ctx: KoaContext) => {
   }
 }
 
-export const signIn = async (ctx: KoaContext) => {
-  const { phone, email, password } = ctx.request.body as { phone?: string; email?: string; password: string }
+// create admin account
+export const adminSignUp = async (ctx: KoaContext) => {
+  const { phone, email, username, userId, password } = ctx.request.body as {
+    phone: string
+    email: string
+    username: string
+    userId: string
+    password: string
+  }
 
-  if (!password) {
-    ctx.status = StatusCodes.BAD_REQUEST
+  if (ctx.request.header['x-admin-token'] !== config.adminToken) {
+    ctx.status = StatusCodes.FORBIDDEN
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
-        message: 'Invalid parameters',
-        target: ['password'],
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Permission denied',
+        target: [],
         innererror: {},
       },
     }
     return
   }
 
-  if (!phone && !email) {
+  if (!username || !phone || !email || !userId || !password) {
     ctx.status = StatusCodes.BAD_REQUEST
     ctx.body = {
       error: {
         code: ERROR_CODE.INVALID_PARAMETER,
         message: 'Invalid parameters',
-        target: ['phone', 'email'],
+        target: ['phone', 'email', 'username', 'userId', 'password'],
         innererror: {},
       },
     }
     return
   }
 
-  if (email && !isEmail(email)) {
+  if (!isEmail(email)) {
     ctx.status = StatusCodes.BAD_REQUEST
     ctx.body = {
       error: {
@@ -129,15 +165,92 @@ export const signIn = async (ctx: KoaContext) => {
     return
   }
 
-  const findCondition: Record<string, string> = {}
   try {
-    if (phone) {
-      findCondition.phone = phone
-    } else if (email) {
-      findCondition.email = email.trim().toLowerCase()
+    const foundUserRecord = await UserModel.findOne({
+      $or: [{ email }, { phone }, { username }, { userId }],
+    })
+    if (foundUserRecord && Object.keys(foundUserRecord).length > 0) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.ALREADY_EXIST,
+          message: 'Admin existed',
+          target: ['email', 'phone', 'username'],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    console.log('[adminSignup] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
+  try {
+    const createUserBody: Record<string, string | number> = {
+      id: nanoid(),
+      userId,
+      username,
+      role: ROLE.ADMIN,
+    }
+    const salt = await bcrypt.genSalt(config.authSaltValue)
+    const hashedPassword = bcrypt.hashSync(password, salt)
+
+    createUserBody.phone = phone
+    createUserBody.email = email.trim().toLowerCase()
+    createUserBody.password = hashedPassword
+
+    const createUserRecordResponse = await UserModel.create(createUserBody)
+    const response = {
+      id: createUserRecordResponse.id,
+      userId: createUserRecordResponse.userId,
+      username: createUserRecordResponse.username,
+      phone: createUserRecordResponse.phone,
+      email: createUserRecordResponse.email,
     }
 
-    const user = await UserModel.findOne({ ...findCondition }, { userId: 1, password: 1, role: 1 })
+    ctx.status = StatusCodes.CREATED
+    ctx.body = { success: true, response }
+  } catch (error) {
+    console.log('[adminSignup] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+}
+
+export const signIn = async (ctx: KoaContext) => {
+  const { userId, password } = ctx.request.body as { userId: string; password: string }
+
+  if (!userId || !password) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid parameters',
+        target: ['userId', 'password'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  try {
+    const user = await UserModel.findOne({ userId }, { userId: 1, password: 1, role: 1 })
 
     if (!user || Object.keys(user).length === 0) {
       ctx.status = StatusCodes.BAD_REQUEST
@@ -189,7 +302,7 @@ export const signIn = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},
@@ -284,7 +397,7 @@ export const changePassword = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},
@@ -331,7 +444,7 @@ export const changePassword = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},

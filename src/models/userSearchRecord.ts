@@ -7,11 +7,11 @@ export type TUserSearchRecord = {
   birthday: number
   phone: string
   company: string
-  createdAt: number // second
-  updatedAt: number // second
+  createdAt: Date // second
+  updatedAt: Date // second
   deletedAt: number // second
-  createdBy: number // userId
-  updatedBy: number // userid
+  createdBy: string // userId
+  updatedBy: string // userid
 }
 
 const UserSearchRecordSchema = new mongoose.Schema(
@@ -46,30 +46,23 @@ const UserSearchRecordSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
-    createdAt: {
-      type: Number,
-      default: Math.floor(new Date().getTime() / 1000),
-    },
-    updatedAt: {
-      type: Number,
-      default: Math.floor(new Date().getTime() / 1000),
-    },
     deletedAt: {
       type: Number,
       default: null,
     },
     createdBy: {
-      type: Number,
+      type: String,
       default: null,
     },
     updatedBy: {
-      type: Number,
+      type: String,
       default: null,
     },
   },
   {
     collection: 'userSearchRecord',
     versionKey: false,
+    timestamps: true,
   },
 )
 

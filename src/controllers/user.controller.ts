@@ -4,7 +4,6 @@ import config from '../config'
 import { ROLE, UserModel } from '../models/user'
 import type { KoaContext } from '../types/koa'
 import { ERROR_CODE } from '../types/error'
-import extendedDayJs from '../utils/dayjs'
 
 enum LIST_USER_FILTER {
   ALL = 'all',
@@ -112,7 +111,7 @@ export const listUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},
@@ -126,9 +125,9 @@ export const listUser = async (ctx: KoaContext) => {
       findCondition['$or'] = [{ email: `/${keyword}/i` }, { phone: `/${keyword}/` }, { username: `/${keyword}/i` }]
     }
     if (filter === LIST_USER_FILTER.HAS_ACCOUNT) {
-      findCondition.email = { $eq: null }
+      findCondition.userId = { $ne: null }
     } else if (filter === LIST_USER_FILTER.NOT_HAVE_ACCOUNT) {
-      findCondition.email = { $ne: null }
+      findCondition.userId = { $eq: null }
     }
 
     const totalRecords = await UserModel.countDocuments(findCondition)
@@ -139,6 +138,7 @@ export const listUser = async (ctx: KoaContext) => {
       .lean()
       .transform((docs) =>
         docs.map((doc) => ({
+          id: doc.id,
           userId: doc.userId,
           username: doc.username,
           phone: doc.phone,
@@ -159,7 +159,7 @@ export const listUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},
@@ -169,7 +169,7 @@ export const listUser = async (ctx: KoaContext) => {
 }
 
 export const updateUser = async (ctx: KoaContext) => {
-  const { id } = ctx.request.query as { id: string }
+  const { id } = ctx.params as { id: string }
   const { userId, password, searchAmountLeft } = ctx.request.body as {
     userId: string
     password: string
@@ -182,7 +182,7 @@ export const updateUser = async (ctx: KoaContext) => {
       error: {
         code: ERROR_CODE.INVALID_PARAMETER,
         message: 'Invalid parameters',
-        target: ['id'],
+        target: ['id', 'userId', 'password'],
         innererror: {},
       },
     }
@@ -201,7 +201,6 @@ export const updateUser = async (ctx: KoaContext) => {
     }
     return
   }
-
   if (!ctx.user?.id) {
     ctx.status = StatusCodes.BAD_REQUEST
     ctx.body = {
@@ -229,13 +228,9 @@ export const updateUser = async (ctx: KoaContext) => {
   }
 
   try {
+    // find valid admin
     const foundUserRecord = await UserModel.findOne({ userId: ctx.user.id })
-    if (
-      !foundUserRecord ||
-      Object.keys(foundUserRecord).length === 0 ||
-      foundUserRecord.role !== ROLE.ADMIN ||
-      foundUserRecord.id !== id
-    ) {
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0 || foundUserRecord.role !== ROLE.ADMIN) {
       ctx.status = StatusCodes.BAD_REQUEST
       ctx.body = {
         error: {
@@ -252,7 +247,7 @@ export const updateUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},
@@ -261,8 +256,9 @@ export const updateUser = async (ctx: KoaContext) => {
   }
 
   try {
-    const foundUserRecord = await UserModel.findOne({ userId })
-    if (foundUserRecord && Object.keys(foundUserRecord).length > 0) {
+    // find valid user
+    const foundUserRecord = await UserModel.findOne({ id })
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0) {
       ctx.status = StatusCodes.BAD_REQUEST
       ctx.body = {
         error: {
@@ -279,7 +275,7 @@ export const updateUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},
@@ -295,10 +291,8 @@ export const updateUser = async (ctx: KoaContext) => {
 
     const salt = await bcrypt.genSalt(config.authSaltValue)
     const hashedPassword = bcrypt.hashSync(password, salt)
-    const currentTimestamp = extendedDayJs.utc().unix()
 
     updateUserBody.password = hashedPassword
-    updateUserBody.updatedAt = currentTimestamp
     updateUserBody.createdBy = ctx.user.id
     updateUserBody.updatedBy = ctx.user.id
 
@@ -318,7 +312,7 @@ export const updateUser = async (ctx: KoaContext) => {
 
     const response = {
       id: updatedUserResult.id,
-      userId: updatedUserResult.userId,
+      userId,
       username: updatedUserResult.username,
       phone: updatedUserResult.phone,
       email: updatedUserResult.email,
@@ -333,7 +327,7 @@ export const updateUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},

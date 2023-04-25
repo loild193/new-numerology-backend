@@ -54,7 +54,15 @@ app.use(json())
 
 app.use(
   jwt({ secret: config.jwtSecretKey, cookie: '_access_token' }).unless({
-    path: ['/', '/healthcheck', '/api/v1/debug', '/api/v1/debug-limit-ip', '/api/v1/sign-up', '/api/v1/sign-in'],
+    path: [
+      '/',
+      '/healthcheck',
+      '/api/v1/debug',
+      '/api/v1/debug-limit-ip',
+      '/api/v1/sign-up',
+      '/api/v1/admin/sign-up',
+      '/api/v1/sign-in',
+    ],
   }),
 )
 
