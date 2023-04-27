@@ -272,7 +272,7 @@ export const signIn = async (ctx: KoaContext) => {
       ctx.body = {
         error: {
           code: ERROR_CODE.BAD_REQUEST,
-          message: 'Invalid parameters',
+          message: 'Password does not match',
           target: ['password'],
           innererror: {},
         },
@@ -296,7 +296,10 @@ export const signIn = async (ctx: KoaContext) => {
     }
 
     ctx.status = StatusCodes.OK
-    ctx.body = { success: true, response: { accessToken, role: user.role } }
+    ctx.body = {
+      success: true,
+      response: { accessToken, userId: user.userId, username: user.username, email: user.email, role: user.role },
+    }
   } catch (error) {
     console.log('[signIn] Error:', error)
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
