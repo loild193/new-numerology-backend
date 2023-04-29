@@ -31,12 +31,12 @@ Content-Type: application/json
 }
 
 ### Get list users
-GET http://localhost:9090/api/v1/users?filter=not_have_account
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgyNDM5NTE4LCJleHAiOjE2ODI1MjU5MTh9.sk_h0CCyP7msRREWeqlRrfmHvJWWgJLc8SWAYKUjfpg
+GET http://localhost:9090/api/v1/users?filter=all&keyword=test
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgyNzY5ODA3LCJleHAiOjE2ODI4NTYyMDd9.QLeOL2PJO8p8Q8-5RoZXH6q0RFMDRmS7QGXzwmKJwis
 
 ### Update users
 PUT http://localhost:9090/api/v1/users/vf_htvvRcpFx81F_hBYvf
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgyNDM5NTE4LCJleHAiOjE2ODI1MjU5MTh9.sk_h0CCyP7msRREWeqlRrfmHvJWWgJLc8SWAYKUjfpg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgyNzY5ODA3LCJleHAiOjE2ODI4NTYyMDd9.QLeOL2PJO8p8Q8-5RoZXH6q0RFMDRmS7QGXzwmKJwis
 Content-Type: application/json
 
 {

@@ -250,7 +250,7 @@ export const signIn = async (ctx: KoaContext) => {
   }
 
   try {
-    const user = await UserModel.findOne({ userId }, { userId: 1, password: 1, role: 1 })
+    const user = await UserModel.findOne({ userId })
 
     if (!user || Object.keys(user).length === 0) {
       ctx.status = StatusCodes.BAD_REQUEST

@@ -29,11 +29,7 @@ const app = new Koa()
 // init redis connection
 Redis.init(initRedisClient)
 
-app.use(
-  logger({
-    level: 'error',
-  }),
-)
+app.use(logger())
 
 // adds request received hrtime and date symbols to request object
 app.use(requestReceived)

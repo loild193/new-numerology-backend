@@ -122,7 +122,9 @@ export const listUser = async (ctx: KoaContext) => {
   try {
     const findCondition: Record<string, any> = {}
     if (keyword) {
-      findCondition['$or'] = [{ email: `/${keyword}/i` }, { phone: `/${keyword}/` }, { username: `/${keyword}/i` }]
+      const regex = new RegExp(`${keyword}`, 'i')
+      console.log('regex', regex)
+      findCondition['$or'] = [{ email: regex }, { phone: new RegExp(`${keyword}`) }, { username: regex }]
     }
     if (filter === LIST_USER_FILTER.HAS_ACCOUNT) {
       findCondition.userId = { $ne: null }
@@ -151,11 +153,124 @@ export const listUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.OK
     ctx.body = {
       success: true,
-      response: users,
-      pagination: { startPage: startPage + 1, limit: Number(limit), totalPages, totalRecords },
+      response: {
+        users,
+        pagination: { startPage: startPage + 1, limit: Number(limit), totalPages, totalRecords },
+      },
     }
   } catch (error) {
     console.log('[listUser] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+}
+
+export const detailUser = async (ctx: KoaContext) => {
+  const { id } = ctx.params as { id: string }
+
+  if (!id) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid parameters',
+        target: ['id'],
+        innererror: {},
+      },
+    }
+    return
+  }
+  if (!ctx.user?.id) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Invalid user',
+        target: ['ctx.user.id'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!ctx.user?.role || ctx.user.role !== ROLE.ADMIN) {
+    ctx.status = StatusCodes.FORBIDDEN
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Permission denied',
+        target: ['role'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  try {
+    // find valid admin
+    const foundUserRecord = await UserModel.findOne({ userId: ctx.user.id })
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0 || foundUserRecord.role !== ROLE.ADMIN) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.NOT_FOUND,
+          message: 'Invalid user',
+          target: ['ctx.user.id'],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    console.log('[detailUser] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
+  try {
+    // find valid user
+    const foundUserRecord = await UserModel.findOne({ id })
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.ALREADY_EXIST,
+          message: 'User not existed',
+          target: ['userId'],
+          innererror: {},
+        },
+      }
+      return
+    }
+
+    const response = {
+      id: foundUserRecord.id,
+      userId: foundUserRecord.userId,
+      username: foundUserRecord.username,
+      phone: foundUserRecord.phone,
+      email: foundUserRecord.email,
+      searchAmountLeft: foundUserRecord.searchAmountLeft,
+      role: ROLE.USER,
+    }
+
+    ctx.status = StatusCodes.OK
+    ctx.body = { success: true, response }
+  } catch (error) {
+    console.log('[detailUser] Error:', error)
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
@@ -263,7 +378,7 @@ export const updateUser = async (ctx: KoaContext) => {
       ctx.body = {
         error: {
           code: ERROR_CODE.ALREADY_EXIST,
-          message: 'User is existed',
+          message: 'User not existed',
           target: ['userId'],
           innererror: {},
         },
