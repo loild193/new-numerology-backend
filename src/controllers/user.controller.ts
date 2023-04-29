@@ -2,8 +2,10 @@ import { StatusCodes, getReasonPhrase } from 'http-status-codes'
 import bcrypt from 'bcryptjs'
 import config from '../config'
 import { ROLE, UserModel } from '../models/user'
+import { UserSearchRecordModel } from '../models/userSearchRecord'
 import type { KoaContext } from '../types/koa'
 import { ERROR_CODE } from '../types/error'
+import { nanoid } from 'nanoid'
 
 enum LIST_USER_FILTER {
   ALL = 'all',
@@ -443,6 +445,223 @@ export const updateUser = async (ctx: KoaContext) => {
     ctx.body = {
       error: {
         code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+}
+
+export const updateSearchAmountLeft = async (ctx: KoaContext) => {
+  const { id } = ctx.params as { id: string }
+  const { user } = ctx
+  const { searchAmountLeft } = ctx.request.body as {
+    searchAmountLeft: number
+  }
+
+  if (user?.role != ROLE.ADMIN) {
+    ctx.status = StatusCodes.FORBIDDEN
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Permission denied',
+        target: ['role'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!searchAmountLeft || isNaN(searchAmountLeft)) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.BAD_REQUEST,
+        message: 'Invalid searchAmountLeft',
+        target: ['searchAmountLeft'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  try {
+    const userBodyUpdate = {
+      searchAmountLeft,
+    }
+    console.log('id: ', id)
+    const foundUserRecord = await UserModel.findOneAndUpdate({ id }, userBodyUpdate)
+
+    console.log('foundUserRecord: ', foundUserRecord)
+    if (!foundUserRecord) {
+      ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.BAD_REQUEST,
+          message: 'Not found',
+          target: [],
+          innererror: {},
+        },
+      }
+
+      return
+    }
+
+    const response = {
+      searchAmountLeft,
+    }
+
+    ctx.status = StatusCodes.OK
+    ctx.body = { success: true, response }
+  } catch (error) {
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+}
+
+export const searchNumerology = async (ctx: KoaContext) => {
+  const { name, birthday, phone, company } = ctx.request.body as {
+    phone: string
+    name: string
+    birthday: string
+    company: string
+  }
+
+  const { user } = ctx
+
+  if (!name) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid name',
+        target: ['name'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!birthday) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid date of birth',
+        target: ['birthday'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!phone) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid phone',
+        target: ['phone'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!company) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid company',
+        target: ['company'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  let foundUserRecord
+  try {
+    console.log('user: ', user)
+    foundUserRecord = await UserModel.findOne({ userId: user?.id })
+    console.log('foundUserRecord: ', foundUserRecord)
+    if (!foundUserRecord) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.BAD_REQUEST,
+          message: 'User not found',
+          target: [],
+          innererror: {},
+        },
+      }
+
+      return
+    }
+
+    if (foundUserRecord.searchAmountLeft <= 0) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.BAD_REQUEST,
+          message: 'Search amount is not enough',
+          target: [],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
+  try {
+    const userSearchRecordBody = {
+      id: nanoid(),
+      userId: ctx.user?.id,
+      name,
+      birthday,
+      phone,
+      company,
+    }
+    const createUserSearchRecordResponse = await UserSearchRecordModel.create(userSearchRecordBody)
+    const updateUserSearchAmountLeft = await UserModel.updateOne(
+      { userId: user?.id },
+      { searchAmountLeft: foundUserRecord.searchAmountLeft - 1 },
+    )
+
+    const response = {
+      name: createUserSearchRecordResponse.name,
+      birthday: createUserSearchRecordResponse.birthday,
+      phone: createUserSearchRecordResponse.phone,
+      company: createUserSearchRecordResponse.company,
+    }
+
+    ctx.status = StatusCodes.OK
+    ctx.body = { success: true, response }
+  } catch (error) {
+    console.log(error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},

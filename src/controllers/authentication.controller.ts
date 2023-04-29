@@ -9,6 +9,8 @@ import extendedDayJs from '../utils/dayjs'
 import { signToken } from '../utils/jwt'
 import { isEmail } from '../utils/validate'
 
+const DEFAULT_SEARCH_AMOUNT_LEFT = 50
+
 export const signUp = async (ctx: KoaContext) => {
   const { phone, email, username } = ctx.request.body as { phone?: string; email?: string; username: string }
 
@@ -438,6 +440,108 @@ export const changePassword = async (ctx: KoaContext) => {
       userId: updatedUserResult.userId,
       phone: updatedUserResult.phone,
       email: updatedUserResult.email,
+    }
+
+    ctx.status = StatusCodes.OK
+    ctx.body = { success: true, response }
+  } catch (error) {
+    console.log('[updateUser] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+}
+
+export const createUser = async (ctx: KoaContext) => {
+  const { userId, password, searchAmountLeft } = ctx.request.body as {
+    userId: string
+    password: string
+    searchAmountLeft: number
+  }
+  const { user } = ctx
+
+  if (user?.role !== ROLE.ADMIN) {
+    ctx.status = StatusCodes.FORBIDDEN
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Permission denied',
+        target: ['role'],
+        innererror: {},
+      },
+    }
+
+    return
+  }
+
+  if (!userId || !password) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid parameters',
+        target: ['userId', 'password'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (searchAmountLeft && Number.isNaN(Number(searchAmountLeft))) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid parameters',
+        target: ['searchAmountLeft'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  try {
+    // check if userId iss valid
+    const foundUserRecord = await UserModel.findOne({ userId })
+    if (foundUserRecord) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.ALREADY_EXIST,
+          message: 'User is existed',
+          target: ['userId'],
+          innererror: {},
+        },
+      }
+      return
+    }
+
+    const createUserBody: Record<string, string | number> = {
+      id: nanoid(),
+      userId,
+      role: ROLE.USER,
+      username: userId,
+      searchAmountLeft: searchAmountLeft ?? DEFAULT_SEARCH_AMOUNT_LEFT,
+    }
+
+    const salt = await bcrypt.genSalt(config.authSaltValue)
+    const hashedPassword = bcrypt.hashSync(password, salt)
+
+    createUserBody.password = hashedPassword
+
+    const createUserRecordResponse = await UserModel.create(createUserBody)
+    const response = {
+      userId: createUserRecordResponse.userId,
+      id: createUserRecordResponse.id,
+      role: createUserRecordResponse.role,
+      username: createUserRecordResponse.userId,
+      searchAmountLeft: createUserRecordResponse.searchAmountLeft,
     }
 
     ctx.status = StatusCodes.OK

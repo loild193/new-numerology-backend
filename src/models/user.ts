@@ -30,6 +30,7 @@ const UserSchema = new mongoose.Schema(
     },
     userId: {
       type: String,
+      unique: true,
       default: null,
     },
     username: {
