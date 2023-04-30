@@ -480,6 +480,34 @@ export const createUser = async (ctx: KoaContext) => {
     return
   }
 
+  try {
+    // find valid admin
+    const foundUserRecord = await UserModel.findOne({ userId: user.id })
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0 || foundUserRecord.role !== ROLE.ADMIN) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.NOT_FOUND,
+          message: 'Invalid user',
+          target: ['ctx.user.id'],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    console.log('[updateUser] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
   if (!userId || !password) {
     ctx.status = StatusCodes.BAD_REQUEST
     ctx.body = {
@@ -530,6 +558,7 @@ export const createUser = async (ctx: KoaContext) => {
       searchAmountLeft: searchAmountLeft ?? DEFAULT_SEARCH_AMOUNT_LEFT,
     }
 
+    // hash password
     const salt = await bcrypt.genSalt(config.authSaltValue)
     const hashedPassword = bcrypt.hashSync(password, salt)
 
@@ -547,7 +576,6 @@ export const createUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.OK
     ctx.body = { success: true, response }
   } catch (error) {
-    console.log('[updateUser] Error:', error)
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {

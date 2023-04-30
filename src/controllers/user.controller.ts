@@ -490,10 +490,8 @@ export const updateSearchAmountLeft = async (ctx: KoaContext) => {
     const userBodyUpdate = {
       searchAmountLeft,
     }
-    console.log('id: ', id)
     const foundUserRecord = await UserModel.findOneAndUpdate({ id }, userBodyUpdate)
 
-    console.log('foundUserRecord: ', foundUserRecord)
     if (!foundUserRecord) {
       ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
       ctx.body = {
@@ -509,6 +507,7 @@ export const updateSearchAmountLeft = async (ctx: KoaContext) => {
     }
 
     const response = {
+      userId: foundUserRecord?.userId,
       searchAmountLeft,
     }
 
@@ -591,9 +590,7 @@ export const searchNumerology = async (ctx: KoaContext) => {
 
   let foundUserRecord
   try {
-    console.log('user: ', user)
     foundUserRecord = await UserModel.findOne({ userId: user?.id })
-    console.log('foundUserRecord: ', foundUserRecord)
     if (!foundUserRecord) {
       ctx.status = StatusCodes.BAD_REQUEST
       ctx.body = {
@@ -648,6 +645,7 @@ export const searchNumerology = async (ctx: KoaContext) => {
     )
 
     const response = {
+      userId: createUserSearchRecordResponse.userId,
       name: createUserSearchRecordResponse.name,
       birthday: createUserSearchRecordResponse.birthday,
       phone: createUserSearchRecordResponse.phone,
