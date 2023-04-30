@@ -535,9 +535,23 @@ export const createUser = async (ctx: KoaContext) => {
   }
 
   try {
-    // check if userId iss valid
+    // check if userId or username is valid
     const foundUserRecord = await UserModel.findOne({ userId })
+    const foundUserByUsernameRecord = await UserModel.findOne({ username: userId })
     if (foundUserRecord) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.ALREADY_EXIST,
+          message: 'User is existed',
+          target: ['userId'],
+          innererror: {},
+        },
+      }
+      return
+    }
+
+    if (foundUserByUsernameRecord) {
       ctx.status = StatusCodes.BAD_REQUEST
       ctx.body = {
         error: {

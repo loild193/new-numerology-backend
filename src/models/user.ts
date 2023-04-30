@@ -41,6 +41,7 @@ const UserSchema = new mongoose.Schema(
     email: {
       type: String,
       unique: true,
+      sparse: true,
     },
     password: {
       type: String,
@@ -48,6 +49,7 @@ const UserSchema = new mongoose.Schema(
     phone: {
       type: String,
       unique: true,
+      sparse: true,
     },
     searchAmountLeft: {
       type: Number,
