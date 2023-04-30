@@ -576,6 +576,7 @@ export const createUser = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.OK
     ctx.body = { success: true, response }
   } catch (error) {
+    console.log('[createUser]', error)
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
