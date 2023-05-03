@@ -57,6 +57,7 @@ export const signUp = async (ctx: KoaContext) => {
     const foundUserRecord = await UserModel.findOne({
       $or: [{ email }, { phone }, { username }],
     })
+
     if (foundUserRecord && Object.keys(foundUserRecord).length > 0) {
       ctx.status = StatusCodes.BAD_REQUEST
       ctx.body = {
@@ -459,9 +460,12 @@ export const changePassword = async (ctx: KoaContext) => {
 }
 
 export const createUser = async (ctx: KoaContext) => {
-  const { userId, password, searchAmountLeft } = ctx.request.body as {
+  const { userId, username, password, email, phone, searchAmountLeft } = ctx.request.body as {
     userId: string
+    username: string
     password: string
+    email: string
+    phone: string
     searchAmountLeft: number
   }
   const { user } = ctx
@@ -496,7 +500,7 @@ export const createUser = async (ctx: KoaContext) => {
       return
     }
   } catch (error) {
-    console.log('[updateUser] Error:', error)
+    console.log('[createUser] Error:', error)
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
@@ -508,13 +512,13 @@ export const createUser = async (ctx: KoaContext) => {
     }
   }
 
-  if (!userId || !password) {
+  if (!userId || !username || !password || !phone || !email) {
     ctx.status = StatusCodes.BAD_REQUEST
     ctx.body = {
       error: {
         code: ERROR_CODE.INVALID_PARAMETER,
         message: 'Invalid parameters',
-        target: ['userId', 'password'],
+        target: ['userId', 'password', 'username', 'phone', 'email'],
         innererror: {},
       },
     }
@@ -536,22 +540,10 @@ export const createUser = async (ctx: KoaContext) => {
 
   try {
     // check if userId or username is valid
-    const foundUserRecord = await UserModel.findOne({ userId })
-    const foundUserByUsernameRecord = await UserModel.findOne({ username: userId })
+    const foundUserRecord = await UserModel.findOne({
+      $or: [{ email }, { phone }, { username }],
+    })
     if (foundUserRecord) {
-      ctx.status = StatusCodes.BAD_REQUEST
-      ctx.body = {
-        error: {
-          code: ERROR_CODE.ALREADY_EXIST,
-          message: 'User is existed',
-          target: ['userId'],
-          innererror: {},
-        },
-      }
-      return
-    }
-
-    if (foundUserByUsernameRecord) {
       ctx.status = StatusCodes.BAD_REQUEST
       ctx.body = {
         error: {
@@ -568,7 +560,9 @@ export const createUser = async (ctx: KoaContext) => {
       id: nanoid(),
       userId,
       role: ROLE.USER,
-      username: userId,
+      username,
+      email,
+      phone,
       searchAmountLeft: searchAmountLeft ?? DEFAULT_SEARCH_AMOUNT_LEFT,
     }
 
@@ -583,7 +577,9 @@ export const createUser = async (ctx: KoaContext) => {
       userId: createUserRecordResponse.userId,
       id: createUserRecordResponse.id,
       role: createUserRecordResponse.role,
-      username: createUserRecordResponse.userId,
+      username: createUserRecordResponse.username,
+      email: createUserRecordResponse.email,
+      phone: createUserRecordResponse.phone,
       searchAmountLeft: createUserRecordResponse.searchAmountLeft,
     }
 
