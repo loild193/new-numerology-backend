@@ -11,7 +11,7 @@ export type TUserSearchRecord = {
   updatedAt: Date // second
   deletedAt: number // second
   createdBy: string // userId
-  updatedBy: string // userid
+  updatedBy: string // userId
 }
 
 const UserSearchRecordSchema = new mongoose.Schema(
@@ -24,12 +24,10 @@ const UserSearchRecordSchema = new mongoose.Schema(
     userId: {
       type: String,
       required: true,
-      unique: true,
       index: true,
     },
     name: {
       type: String,
-      unique: true,
       required: true,
     },
     birthday: {
@@ -38,12 +36,10 @@ const UserSearchRecordSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      unique: true,
       required: true,
     },
     company: {
       type: String,
-      unique: true,
       required: true,
     },
     deletedAt: {
@@ -66,4 +62,4 @@ const UserSearchRecordSchema = new mongoose.Schema(
   },
 )
 
-export const UserSearchRecordModel = mongoose.model<TUserSearchRecord>('user', UserSearchRecordSchema)
+export const UserSearchRecordModel = mongoose.model<TUserSearchRecord>('user_search_record', UserSearchRecordSchema)
