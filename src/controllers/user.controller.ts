@@ -1,7 +1,7 @@
 import { StatusCodes, getReasonPhrase } from 'http-status-codes'
 import bcrypt from 'bcryptjs'
 import config from '../config'
-import { ROLE, UserModel } from '../models/user'
+import { ROLE, TUser, UserModel } from '../models/user'
 import { UserSearchRecordModel } from '../models/userSearchRecord'
 import type { KoaContext } from '../types/koa'
 import { ERROR_CODE } from '../types/error'
@@ -562,35 +562,35 @@ export const searchNumerology = async (ctx: KoaContext) => {
     return
   }
 
-  let foundUserRecord
+  if (!phone) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid phone',
+        target: ['phone'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!company) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid company',
+        target: ['company'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  let foundUserRecord: TUser | null = null
   try {
     foundUserRecord = await UserModel.findOne({ userId: user?.id })
-    if (!foundUserRecord) {
-      ctx.status = StatusCodes.BAD_REQUEST
-      ctx.body = {
-        error: {
-          code: ERROR_CODE.BAD_REQUEST,
-          message: 'User not found',
-          target: [],
-          innererror: {},
-        },
-      }
-
-      return
-    }
-
-    if (foundUserRecord.searchAmountLeft <= 0) {
-      ctx.status = StatusCodes.BAD_REQUEST
-      ctx.body = {
-        error: {
-          code: ERROR_CODE.BAD_REQUEST,
-          message: 'Search amount is not enough',
-          target: [],
-          innererror: {},
-        },
-      }
-      return
-    }
   } catch (error) {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
@@ -603,6 +603,33 @@ export const searchNumerology = async (ctx: KoaContext) => {
     }
   }
 
+  if (!foundUserRecord) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.BAD_REQUEST,
+        message: 'User not found',
+        target: [],
+        innererror: {},
+      },
+    }
+
+    return
+  }
+
+  if (foundUserRecord.searchAmountLeft <= 0) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.BAD_REQUEST,
+        message: 'Search amount is not enough',
+        target: [],
+        innererror: {},
+      },
+    }
+    return
+  }
+
   try {
     const userSearchRecordBody = {
       id: nanoid(),
@@ -613,13 +640,27 @@ export const searchNumerology = async (ctx: KoaContext) => {
       company,
     }
     const createUserSearchRecordResponse = await UserSearchRecordModel.create(userSearchRecordBody)
-    const updateUserSearchAmountLeft = await UserModel.updateOne(
+    const updatedUserRecord = await UserModel.findOneAndUpdate(
       { userId: user?.id },
       { searchAmountLeft: foundUserRecord.searchAmountLeft - 1 },
     )
 
+    if (!updatedUserRecord) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.BAD_REQUEST,
+          message: 'Cannot update user record',
+          target: [],
+          innererror: {},
+        },
+      }
+
+      return
+    }
+
     const response = {
-      userId: createUserSearchRecordResponse.userId,
+      userId: updatedUserRecord.userId,
       name: createUserSearchRecordResponse.name,
       birthday: createUserSearchRecordResponse.birthday,
       phone: createUserSearchRecordResponse.phone,
