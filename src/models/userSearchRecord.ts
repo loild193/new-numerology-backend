@@ -36,11 +36,9 @@ const UserSearchRecordSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
     },
     company: {
       type: String,
-      required: true,
     },
     deletedAt: {
       type: Number,
