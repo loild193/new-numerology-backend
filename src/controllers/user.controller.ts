@@ -530,8 +530,8 @@ export const searchNumerology = async (ctx: KoaContext) => {
   const { name, birthday, phone, company } = ctx.request.body as {
     phone: string
     name: string
-    birthday: string
-    company: string
+    birthday?: string
+    company?: string
   }
 
   const { user } = ctx
@@ -556,32 +556,6 @@ export const searchNumerology = async (ctx: KoaContext) => {
         code: ERROR_CODE.INVALID_PARAMETER,
         message: 'Invalid date of birth',
         target: ['birthday'],
-        innererror: {},
-      },
-    }
-    return
-  }
-
-  if (!phone) {
-    ctx.status = StatusCodes.BAD_REQUEST
-    ctx.body = {
-      error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
-        message: 'Invalid phone',
-        target: ['phone'],
-        innererror: {},
-      },
-    }
-    return
-  }
-
-  if (!company) {
-    ctx.status = StatusCodes.BAD_REQUEST
-    ctx.body = {
-      error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
-        message: 'Invalid company',
-        target: ['company'],
         innererror: {},
       },
     }
@@ -660,6 +634,127 @@ export const searchNumerology = async (ctx: KoaContext) => {
     ctx.body = {
       error: {
         code: ERROR_CODE.INVALID_PARAMETER,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+}
+
+export const listSearchNumerology = async (ctx: KoaContext) => {
+  const startPage = Number(ctx.request.query.startPage || DEFAULT_START_PAGE) - 1
+  const limit = Number(ctx.request.query.limit || DEFAULT_ITEM_PER_PAGE)
+  const { id } = ctx.params as { id: string }
+
+  if (startPage < 0 || Number.isNaN(startPage)) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid parameters',
+        target: ['startPage'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (Number.isNaN(limit)) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid parameters',
+        target: ['limit'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!ctx.user?.id) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Invalid user',
+        target: ['ctx.user.id'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!ctx.user?.role || ctx.user.role !== ROLE.ADMIN) {
+    ctx.status = StatusCodes.FORBIDDEN
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Permission denied',
+        target: ['role'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  let foundUserRecord
+  try {
+    console.log(' foundUserRecord id: ', id)
+    foundUserRecord = await UserModel.findOne({ id: id })
+    console.log('foundUserRecord: ', foundUserRecord)
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.NOT_FOUND,
+          message: 'Invalid user',
+          target: ['userId'],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    console.log('[listSearch] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
+  try {
+    const findCondition: Record<string, any> = {
+      userId: foundUserRecord.userId,
+    }
+
+    const totalRecords = await UserSearchRecordModel.countDocuments(findCondition)
+    const totalPages = Math.ceil(totalRecords / limit)
+
+    const searchRecords = await UserSearchRecordModel.find(findCondition, null, { skip: startPage * limit, limit })
+      .sort({ createdAt: 1 })
+      .lean()
+
+    ctx.status = StatusCodes.OK
+    ctx.body = {
+      success: true,
+      response: {
+        searchRecords,
+        pagination: { startPage: startPage + 1, limit: Number(limit), totalPages, totalRecords },
+      },
+    }
+  } catch (error) {
+    console.log('[listSearch] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},

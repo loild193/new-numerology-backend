@@ -26,8 +26,8 @@ POST http://localhost:9090/api/v1/sign-in
 Content-Type: application/json
 
 {
-  "userId": "khanhvanga1",
-  "password": "khanhvanga1"
+  "userId": "admin",
+  "password": "admin"
 }
 
 ### Get list users
@@ -46,14 +46,12 @@ Content-Type: application/json
 
 ### Search numerology
 POST http://localhost:9090/api/v1/users/search-numerology
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImtoYW5odmFuZ2EiLCJyb2xlIjoxLCJpYXQiOjE2ODI3ODY4NjEsImV4cCI6MTY4Mjg3MzI2MX0.ih0EuGwMsE0-4SvUCzSlW0OAtDhgVeYOT7dDuit5CKc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgzMzY4MDA0LCJleHAiOjE2ODM0NTQ0MDR9.tcKcNwGYxus52kgiOKJRe6F1jeirmKeCYkhnzcpoWUY
 Content-Type: application/json
 
 {
   "name": "khánh và nga",
-  "birthday": "071299",
-  "phone": "092838323",
-  "company": "Kaido"
+  "birthday": "071299"
 }
 
 
@@ -78,3 +76,8 @@ Content-Type: application/json
   "password": "khanhvanga123",
   "searchAmountLeft": 50
 }
+### Admin create user account
+
+GET http://localhost:9090/api/v1/users/rkX0Q6gbgM98zbOcFlw21/search-numerology?startPage=1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgzMzY4MDA0LCJleHAiOjE2ODM0NTQ0MDR9.tcKcNwGYxus52kgiOKJRe6F1jeirmKeCYkhnzcpoWUY
+Content-Type: application/json
