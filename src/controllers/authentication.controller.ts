@@ -301,7 +301,14 @@ export const signIn = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.OK
     ctx.body = {
       success: true,
-      response: { accessToken, userId: user.userId, username: user.username, email: user.email, role: user.role },
+      response: {
+        accessToken,
+        userId: user.userId,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        searchAmountLeft: user.searchAmountLeft,
+      },
     }
   } catch (error) {
     console.log('[signIn] Error:', error)
