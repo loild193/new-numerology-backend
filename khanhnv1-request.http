@@ -68,13 +68,16 @@ Content-Type: application/json
 ### Admin create user account
 
 POST http://localhost:9090/api/v1/create-user
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgyODcwODY5LCJleHAiOjE2ODI5NTcyNjl9.QByd2KdOzWxZ3DwHWRAXynD8D1TN4RUagcyUmi32Ij8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgzNTYyODQ4LCJleHAiOjE2ODM2NDkyNDh9.hozGnMqJBKWI3jfduosnxAt25F11PSu-j8Yl7r9cNkE
 Content-Type: application/json
 
 {
-  "userId": "khanhvanga123",
+  "userId": "hihihichic",
   "password": "khanhvanga123",
-  "searchAmountLeft": 50
+  "searchAmountLeft": 50,
+  "username": "hihi haha",
+  "phone": "8823932",
+  "email": "23@mail.vn"
 }
 ### Admin create user account
 

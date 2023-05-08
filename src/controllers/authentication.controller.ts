@@ -548,7 +548,7 @@ export const createUser = async (ctx: KoaContext) => {
   try {
     // check if userId or username is valid
     const foundUserRecord = await UserModel.findOne({
-      $or: [{ email }, { phone }, { username }],
+      $or: [{ email }, { phone }, { username }, { userId }],
     })
     if (foundUserRecord) {
       ctx.status = StatusCodes.BAD_REQUEST
