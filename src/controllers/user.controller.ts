@@ -562,32 +562,6 @@ export const searchNumerology = async (ctx: KoaContext) => {
     return
   }
 
-  if (!phone) {
-    ctx.status = StatusCodes.BAD_REQUEST
-    ctx.body = {
-      error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
-        message: 'Invalid phone',
-        target: ['phone'],
-        innererror: {},
-      },
-    }
-    return
-  }
-
-  if (!company) {
-    ctx.status = StatusCodes.BAD_REQUEST
-    ctx.body = {
-      error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
-        message: 'Invalid company',
-        target: ['company'],
-        innererror: {},
-      },
-    }
-    return
-  }
-
   let foundUserRecord: TUser | null = null
   try {
     foundUserRecord = await UserModel.findOne({ userId: user?.id })
