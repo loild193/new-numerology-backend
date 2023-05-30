@@ -31,11 +31,11 @@ const UserSchema = new mongoose.Schema(
     userId: {
       type: String,
       unique: true,
+      sparse: true,
       default: null,
     },
     username: {
       type: String,
-      unique: true,
       required: true,
     },
     email: {

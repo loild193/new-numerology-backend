@@ -55,7 +55,7 @@ export const signUp = async (ctx: KoaContext) => {
 
   try {
     const foundUserRecord = await UserModel.findOne({
-      $or: [{ email }, { phone }, { username }],
+      $or: [{ email }, { phone }],
     })
 
     if (foundUserRecord && Object.keys(foundUserRecord).length > 0) {
@@ -64,7 +64,7 @@ export const signUp = async (ctx: KoaContext) => {
         error: {
           code: ERROR_CODE.ALREADY_EXIST,
           message: 'User existed',
-          target: ['email', 'phone', 'username'],
+          target: ['email', 'phone'],
           innererror: {},
         },
       }
@@ -110,7 +110,7 @@ export const signUp = async (ctx: KoaContext) => {
     ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
     ctx.body = {
       error: {
-        code: ERROR_CODE.INVALID_PARAMETER,
+        code: ERROR_CODE.SERVER_ERROR,
         message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
         target: [],
         innererror: {},
@@ -170,7 +170,7 @@ export const adminSignUp = async (ctx: KoaContext) => {
 
   try {
     const foundUserRecord = await UserModel.findOne({
-      $or: [{ email }, { phone }, { username }, { userId }],
+      $or: [{ email }, { phone }, { userId }],
     })
     if (foundUserRecord && Object.keys(foundUserRecord).length > 0) {
       ctx.status = StatusCodes.BAD_REQUEST
@@ -178,7 +178,7 @@ export const adminSignUp = async (ctx: KoaContext) => {
         error: {
           code: ERROR_CODE.ALREADY_EXIST,
           message: 'Admin existed',
-          target: ['email', 'phone', 'username'],
+          target: ['email', 'phone'],
           innererror: {},
         },
       }
@@ -546,9 +546,9 @@ export const createUser = async (ctx: KoaContext) => {
   }
 
   try {
-    // check if userId or username is valid
+    // check if userId is valid
     const foundUserRecord = await UserModel.findOne({
-      $or: [{ email }, { phone }, { username }, { userId }],
+      $or: [{ email }, { phone }, { userId }],
     })
     if (foundUserRecord) {
       ctx.status = StatusCodes.BAD_REQUEST
@@ -556,7 +556,7 @@ export const createUser = async (ctx: KoaContext) => {
         error: {
           code: ERROR_CODE.ALREADY_EXIST,
           message: 'User is existed',
-          target: ['userId'],
+          target: ['userId', 'email', 'phone'],
           innererror: {},
         },
       }
