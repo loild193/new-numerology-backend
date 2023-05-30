@@ -4,8 +4,8 @@ Content-Type: application/json
 
 {
   "username": "khanhnv1",
-  "email": "khanhnv1@gmail.com",
-  "phone": "0974970477"
+  "email": "khanhnv2@gmail.com",
+  "phone": "0974970472"
 }
 
 ### Sign up for admin
@@ -68,19 +68,25 @@ Content-Type: application/json
 ### Admin create user account
 
 POST http://localhost:9090/api/v1/create-user
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgzNTYyODQ4LCJleHAiOjE2ODM2NDkyNDh9.hozGnMqJBKWI3jfduosnxAt25F11PSu-j8Yl7r9cNkE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjg1NDU5MjQ0LCJleHAiOjE2ODU1NDU2NDR9.yvWNu2eZOoTFT6Y8V55fp2Pa8SCIHAGNqFOM9eWDf3I
 Content-Type: application/json
 
 {
-  "userId": "hihihichic",
+  "userId": "khanhnv2",
   "password": "khanhvanga123",
   "searchAmountLeft": 50,
-  "username": "hihi haha",
-  "phone": "8823932",
-  "email": "23@mail.vn"
+  "username": "hihi  haha",
+  "phone": "0123456788",
+  "email": "khanhnv2@mail.vn"
 }
 ### Admin create user account
 
 GET http://localhost:9090/api/v1/users/rkX0Q6gbgM98zbOcFlw21/search-numerology?startPage=1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjgzMzY4MDA0LCJleHAiOjE2ODM0NTQ0MDR9.tcKcNwGYxus52kgiOKJRe6F1jeirmKeCYkhnzcpoWUY
 Content-Type: application/json
+
+### Admin delete user
+
+DELETE http://localhost:9090/api/v1/users/GNGQgHHkq-H8-iheDCTO4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluIiwicm9sZSI6MTAwMCwiaWF0IjoxNjg1NDY0ODUxLCJleHAiOjE2ODU1NTEyNTF9.ID7vjE6tgxeAs3edCOl8BScB8mXdLaLra0HV6YeKqso
+Content-Type: application/jsond

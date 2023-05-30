@@ -777,3 +777,132 @@ export const listSearchNumerology = async (ctx: KoaContext) => {
     }
   }
 }
+
+// admin delete user
+export const deleteUser = async (ctx: KoaContext) => {
+  const { id } = ctx.params as { id: string }
+
+  if (!id) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.INVALID_PARAMETER,
+        message: 'Invalid parameters',
+        target: ['id'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!ctx.user?.id) {
+    ctx.status = StatusCodes.BAD_REQUEST
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Invalid user',
+        target: ['ctx.user.id'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  if (!ctx.user?.role || ctx.user.role !== ROLE.ADMIN) {
+    ctx.status = StatusCodes.FORBIDDEN
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.UNAUTHORIZED,
+        message: 'Permission denied',
+        target: ['role'],
+        innererror: {},
+      },
+    }
+    return
+  }
+
+  try {
+    // find valid admin
+    const foundUserRecord = await UserModel.findOne({ userId: ctx.user.id })
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0 || foundUserRecord.role !== ROLE.ADMIN) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.NOT_FOUND,
+          message: 'Invalid user',
+          target: ['ctx.user.id'],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    console.log('[updateUser] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
+  try {
+    // find valid user
+    const foundUserRecord = await UserModel.findOne({ id })
+    if (!foundUserRecord || Object.keys(foundUserRecord).length === 0) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.ALREADY_EXIST,
+          message: 'User not existed',
+          target: ['userId'],
+          innererror: {},
+        },
+      }
+      return
+    }
+  } catch (error) {
+    console.log('[updateUser] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+
+  try {
+    const result = await UserModel.deleteOne({ id })
+    if (!result) {
+      ctx.status = StatusCodes.BAD_REQUEST
+      ctx.body = {
+        error: {
+          code: ERROR_CODE.INVALID_PARAMETER,
+          message: 'Invalid parameters',
+          target: ['userId'],
+          innererror: {},
+        },
+      }
+      return
+    }
+    ctx.status = StatusCodes.OK
+    ctx.body = { success: true, response: result }
+  } catch (error) {
+    console.log('[updateUser] Error:', error)
+    ctx.status = StatusCodes.INTERNAL_SERVER_ERROR
+    ctx.body = {
+      error: {
+        code: ERROR_CODE.SERVER_ERROR,
+        message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
+        target: [],
+        innererror: {},
+      },
+    }
+  }
+}
